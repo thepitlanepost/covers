@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cover preview — The Pitlane Post</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    min-height: 100vh;
+  }
+  form {
+    flex: 0 0 380px;
+    padding: 28px;
+    border-right: 2px solid #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+  h1 { font-size: 1.1rem; margin: 0 0 4px; letter-spacing: 0.02em; }
+  label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.65; display: block; margin-bottom: 4px; }
+  input, select, textarea {
+    width: 100%;
+    background: #111;
+    border: 2px solid #444;
+    color: #fff;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #fff; }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  .color-row { display: flex; gap: 8px; align-items: center; }
+  .color-row input[type="color"] { flex: 0 0 44px; height: 38px; padding: 2px; }
+  .preview-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    background: #0a0a0a;
+  }
+  .preview-wrap img {
+    max-width: 100%;
+    max-height: 80vh;
+    border: 2px solid #333;
+  }
+  .url-box {
+    font-size: 0.72rem;
+    word-break: break-all;
+    background: #111;
+    border: 1px solid #333;
+    padding: 8px;
+    opacity: 0.7;
+    margin-top: auto;
+  }
+  button {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+
+<form id="form">
+  <h1>Cover preview</h1>
+  <div style="opacity:0.5; font-size:0.75rem; margin-bottom:8px;">Every field here maps directly to a query param on the live endpoint — this page doesn't simulate anything, it calls the real API.</div>
+
+  <div>
+    <label for="title">Title</label>
+    <input id="title" value="The HANS device and the Halo" />
+  </div>
+
+  <div class="row">
+    <div>
+      <label for="series">Series / category</label>
+      <input id="series" value="Motorsport Safety, Then vs. Now" />
+    </div>
+    <div>
+      <label for="part">Part #</label>
+      <input id="part" type="number" min="1" value="1" />
+    </div>
+  </div>
+
+  <div>
+    <label for="dek">Dek (social only)</label>
+    <textarea id="dek" rows="2">Two decades of resistance, one Daytona crash, and a device NASCAR mandated before F1 would even test it.</textarea>
+  </div>
+
+  <div>
+    <label for="image">Linked image URL (optional)</label>
+    <input id="image" placeholder="https://..." />
+  </div>
+
+  <div class="row">
+    <div>
+      <label for="style">Cover style</label>
+      <select id="style">
+        <option value="combo">combo (default)</option>
+        <option value="number-only">number-only</option>
+        <option value="accent-block">accent-block</option>
+      </select>
+    </div>
+    <div>
+      <label for="size">Size</label>
+      <select id="size">
+        <option value="cover">cover (16:9)</option>
+        <option value="social">social (1.91:1)</option>
+      </select>
+    </div>
+  </div>
+
+  <div>
+    <label for="accent">Accent color</label>
+    <div class="color-row">
+      <input id="accentPicker" type="color" value="#c4302b" />
+      <input id="accent" value="#c4302b" />
+    </div>
+  </div>
+
+  <div class="url-box" id="urlBox"></div>
+  <button type="button" id="copyBtn">Copy URL</button>
+</form>
+
+<div class="preview-wrap">
+  <img id="preview" alt="Cover preview" />
+</div>
+
+<script>
+  const API = "/api/cover"; // same origin — swap for a full URL if this page is ever hosted elsewhere
+  const $ = (id) => document.getElementById(id);
+  const fields = ["title", "series", "part", "dek", "image", "style", "size", "accent"];
+
+  function buildUrl() {
+    const params = new URLSearchParams();
+    fields.forEach((f) => {
+      const v = $(f).value.trim();
+      if (v) params.set(f, v);
+    });
+    return `${API}?${params.toString()}`;
+  }
+
+  function update() {
+    const url = buildUrl();
+    $("preview").src = url;
+    $("urlBox").textContent = window.location.origin + url;
+  }
+
+  fields.forEach((f) => $(f).addEventListener("input", update));
+
+  $("accentPicker").addEventListener("input", (e) => {
+    $("accent").value = e.target.value;
+    update();
+  });
+  $("accent").addEventListener("input", (e) => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) $("accentPicker").value = e.target.value;
+  });
+
+  $("copyBtn").addEventListener("click", () => {
+    navigator.clipboard.writeText(window.location.origin + buildUrl());
+    $("copyBtn").textContent = "Copied";
+    setTimeout(() => ($("copyBtn").textContent = "Copy URL"), 1200);
+  });
+
+  update();
+</script>
+
+</body>
+</html>

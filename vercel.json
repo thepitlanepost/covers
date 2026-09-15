@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/cover.js": {
+      "includeFiles": "node_modules/@fontsource/**"
+    }
+  }
+}
