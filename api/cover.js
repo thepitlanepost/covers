@@ -5,7 +5,9 @@ import { fonts } from "../lib/fonts.mjs";
 import { coverCombo, coverNumberOnly, coverAccentBlock, socialDossier } from "../lib/templates.mjs";
 import { SIZES, DEFAULT_ACCENT, SITE_NAME, WEBP_QUALITY } from "../lib/config.mjs";
 
-export const config = { runtime: "nodejs" };
+// Node.js is already the default runtime for a plain /api/*.js function with
+// no framework — sharp needs that (it's a native module, won't run on Edge).
+// No explicit runtime config needed to get it.
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const IMAGE_FETCH_TIMEOUT_MS = 5000;

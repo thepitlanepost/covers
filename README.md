@@ -60,6 +60,16 @@ https://covers.thepitlanepost.ca/api/cover?title=The+HANS+device+and+the+Halo&se
   Vercel's function bundler traces static `fs.readFileSync` calls to decide
   what ships with the function; dynamically-built paths are unreliable for
   this. `vercel.json`'s `includeFiles` is a second safety net on top of that.
+- **`sharp` will 500 in production even though the build succeeds, unless
+  `vercel.json` force-includes all of `node_modules`.** `sharp@0.35.x` loads
+  its native `libvips` library via `dlopen()` at runtime rather than a normal
+  `require()`, so Vercel's file tracer frequently doesn't detect it needs
+  bundling — you get `ERR_DLOPEN_FAILED: libvips-cpp.so... cannot open shared
+  object file`, and it only shows up once deployed, never locally. This is a
+  live, current problem with this sharp version specifically (not fixed by
+  anything on our end) — `includeFiles: "node_modules/**"` is the reliable
+  fix over trying to guess the exact `@img/sharp-*` sub-package names, which
+  have changed between sharp versions before.
 - **Fonts are real npm packages** (`@fontsource/aileron`, CC0;
   `@fontsource/mozilla-text`, SIL OFL) — same typefaces the main site uses,
   not substitutes. Aileron's fontsource mirror tops out at weight 800; the
