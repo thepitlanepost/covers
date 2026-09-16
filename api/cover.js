@@ -2,7 +2,7 @@ import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import sharp from "sharp";
 import { fonts } from "../lib/fonts.mjs";
-import { coverCombo, coverNumberOnly, coverAccentBlock, socialDossier } from "../lib/templates.mjs";
+import { coverCombo, coverNumberOnly, coverAccentBlock, socialDossier, socialPhotoForward } from "../lib/templates.mjs";
 import { SIZES, DEFAULT_ACCENT, SITE_NAME, WEBP_QUALITY } from "../lib/config.mjs";
 
 // Node.js is already the default runtime for a plain /api/*.js function with
@@ -46,6 +46,7 @@ export default async function handler(req, res) {
     const { width, height } = SIZES[size];
 
     const style = ["combo", "number-only", "accent-block"].includes(q.style) ? q.style : "combo";
+    const socialStyle = q.socialStyle === "photo-forward" ? "photo-forward" : "dossier";
     const accent = HEX_RE.test(q.accent || "") ? q.accent : DEFAULT_ACCENT;
     const title = q.title || "Untitled";
     const part = q.part ? Number(q.part) : null;
@@ -56,7 +57,12 @@ export default async function handler(req, res) {
 
     let tree;
     if (size === "social") {
-      tree = socialDossier({ w: width, h: height, site: SITE_NAME, label, title, dek: q.dek || "", accent });
+      if (socialStyle === "photo-forward" && imageDataUri) {
+        // Doesn't mean anything without a photo — dossier is the sane fallback
+        tree = socialPhotoForward({ w: width, h: height, site: SITE_NAME, title, accent, imageDataUri });
+      } else {
+        tree = socialDossier({ w: width, h: height, site: SITE_NAME, label, title, dek: q.dek || "", accent, imageDataUri });
+      }
     } else if (style === "accent-block") {
       tree = coverAccentBlock({ w: width, h: height, accent });
     } else if (style === "number-only" && num) {

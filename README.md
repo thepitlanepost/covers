@@ -29,9 +29,10 @@ Then open `http://localhost:3000` for the preview form, or hit
 | `title`  | yes      | Falls back to "Untitled" if missing. Truncated at `TITLE_CHAR_BUDGET` (config.mjs) on cover-size renders; shrinks font size instead on social. |
 | `series` | no       | Series or category name. Combined with `part` to build the label ("Part 01 — X"), or shown alone if there's no part number. |
 | `part`   | no       | Number. Only meaningful for numbered content (Explains parts). Omit for Weekend Verdict / blog. |
-| `dek`    | no       | Social only. Ignored on cover-size renders — deliberately, see DESIGN.md notes below. |
-| `image`  | no       | Absolute URL to a photo to use as the background. Fetched server-side; if it fails or times out, silently falls back to the no-photo variant rather than erroring. |
-| `style`  | no       | `combo` (default) / `number-only` / `accent-block`. `number-only` without a `part` falls back to `combo`. |
+| `dek`    | no       | Social, `dossier` style only. Ignored on cover renders and on `photo-forward` — both deliberately. |
+| `image`  | no       | Absolute URL to a photo to use as the background. Works on cover **and** social now. Fetched server-side; if it fails or times out, silently falls back to the no-photo variant rather than erroring. |
+| `style`  | no       | Cover only. `combo` (default) / `number-only` / `accent-block`. `number-only` without a `part` falls back to `combo`. |
+| `socialStyle` | no  | Social only. `dossier` (default — title, label, dek) or `photo-forward` (image-dominant, title only). `photo-forward` with no `image` falls back to `dossier`. |
 | `size`   | no       | `cover` (1200×675, matches the site's `.box` ratio) or `social` (1200×630, standard OG ratio). Default `cover`. |
 | `accent` | no       | Hex color, e.g. `%23c4302b` (URL-encode the `#`). Falls back to `DEFAULT_ACCENT` in config.mjs if missing or malformed. |
 
