@@ -47,6 +47,7 @@ export default async function handler(req, res) {
 
     const style = ["combo", "number-only", "accent-block"].includes(q.style) ? q.style : "combo";
     const socialStyle = q.socialStyle === "photo-forward" ? "photo-forward" : "dossier";
+    const mode = q.mode === "light" ? "light" : "dark"; // cover only — see note below
     const accent = HEX_RE.test(q.accent || "") ? q.accent : DEFAULT_ACCENT;
     const title = q.title || "Untitled";
     const part = q.part ? Number(q.part) : null;
@@ -57,6 +58,9 @@ export default async function handler(req, res) {
 
     let tree;
     if (size === "social") {
+      // Social/OG images are fetched once by a link-unfurl crawler with no
+      // browser and no theme state — there's no "current mode" to match, so
+      // `mode` is deliberately ignored here and social always renders dark.
       if (socialStyle === "photo-forward" && imageDataUri) {
         // Doesn't mean anything without a photo — dossier is the sane fallback
         tree = socialPhotoForward({ w: width, h: height, site: SITE_NAME, title, accent, imageDataUri });
@@ -64,12 +68,12 @@ export default async function handler(req, res) {
         tree = socialDossier({ w: width, h: height, site: SITE_NAME, label, title, dek: q.dek || "", accent, imageDataUri });
       }
     } else if (style === "accent-block") {
-      tree = coverAccentBlock({ w: width, h: height, accent });
+      tree = coverAccentBlock({ w: width, h: height, accent, mode });
     } else if (style === "number-only" && num) {
       // number-only without a number doesn't mean anything — fall back to combo
-      tree = coverNumberOnly({ w: width, h: height, num, accent, imageDataUri });
+      tree = coverNumberOnly({ w: width, h: height, num, accent, imageDataUri, mode });
     } else {
-      tree = coverCombo({ w: width, h: height, num, title, label, accent, imageDataUri });
+      tree = coverCombo({ w: width, h: height, num, title, label, accent, imageDataUri, mode });
     }
 
     const svg = await satori(tree, { width, height, fonts });
