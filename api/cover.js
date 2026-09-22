@@ -24,10 +24,15 @@ async function fetchImageAsDataUri(url) {
     clearTimeout(timeout);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const buf = Buffer.from(await res.arrayBuffer());
-    const contentType = res.headers.get("content-type") || "image/jpeg";
-    return `data:${contentType};base64,${buf.toString("base64")}`;
+    // Satori's built-in image decoder only understands PNG and JPEG — it
+    // fails (with an unhelpful internal error, not a clean exception message)
+    // on WebP, which is what every real thumbnail on this site actually is.
+    // Transcoding through sharp here guarantees Satori always gets a format
+    // it can decode, regardless of what the CDN actually served.
+    const png = await sharp(buf).png().toBuffer();
+    return `data:image/png;base64,${png.toString("base64")}`;
   } catch (err) {
-    console.warn(`cover: image fetch failed for ${url}, falling back to no-photo variant —`, err.message);
+    console.warn(`cover: image fetch/transcode failed for ${url}, falling back to no-photo variant —`, err.message);
     return null;
   }
 }
