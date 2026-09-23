@@ -75,8 +75,3 @@ https://covers.thepitlanepost.ca/api/cover?title=The+HANS+device+and+the+Halo&se
   `@fontsource/mozilla-text`, SIL OFL) — same typefaces the main site uses,
   not substitutes. Aileron's fontsource mirror tops out at weight 800; the
   original release also has a 900/Black that isn't in this package.
-
-## Deploying
-
-Push to `main`, connect the repo to a new Vercel project, point
-`covers.thepitlanepost.ca` at it in DNS. No environment variables needed.
