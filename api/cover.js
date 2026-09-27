@@ -20,9 +20,19 @@ async function fetchImageAsDataUri(url) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), IMAGE_FETCH_TIMEOUT_MS);
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; ThePitlanePostCoverBot/1.0; +https://www.thepitlanepost.ca)",
+        "Accept": "image/*",
+      },
+    });
     clearTimeout(timeout);
     if (!res.ok) throw new Error(`status ${res.status}`);
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.startsWith("image/")) {
+      throw new Error(`not an image (content-type: ${contentType || "none"}) — likely hotlink protection returning an HTML page instead`);
+    }
     const buf = Buffer.from(await res.arrayBuffer());
     // Satori's built-in image decoder only understands PNG and JPEG — it
     // fails (with an unhelpful internal error, not a clean exception message)
