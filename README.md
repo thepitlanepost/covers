@@ -34,6 +34,7 @@ Then open `http://localhost:3000` for the preview form, or hit
 | `style`  | no       | Cover only. `combo` (default) / `number-only` / `accent-block`. `number-only` without a `part` falls back to `combo`. |
 | `socialStyle` | no  | Social only. `dossier` (default — title, label, dek) or `photo-forward` (image-dominant, title only). `photo-forward` with no `image` falls back to `dossier`. |
 | `size`   | no       | `cover` (1200×675, matches the site's `.box` ratio) or `social` (1200×630, standard OG ratio). Default `cover`. |
+| `mode`   | no       | Cover only. `dark` (default) / `light`. Social renders ignore it and are always dark (a link-unfurl crawler has no theme). |
 | `accent` | no       | Hex color, e.g. `%23c4302b` (URL-encode the `#`). Falls back to `DEFAULT_ACCENT` in config.mjs if missing or malformed. |
 
 Example:
