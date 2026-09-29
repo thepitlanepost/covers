@@ -15,7 +15,7 @@ const IMAGE_FETCH_TIMEOUT_MS = 5000;
 // Never let a bad/slow/dead linked-image URL take the whole cover down —
 // fall back to the no-photo variant of whichever style was requested. This
 // was a known, explicitly-flagged gap before it got fixed here.
-async function fetchImageAsDataUri(url) {
+async function fetchImageAsDataUri(url, { width, height }) {
   if (!url) return null;
   try {
     const controller = new AbortController();
@@ -29,18 +29,27 @@ async function fetchImageAsDataUri(url) {
     });
     clearTimeout(timeout);
     if (!res.ok) throw new Error(`status ${res.status}`);
-    const contentType = res.headers.get("content-type") || "";
-    if (!contentType.startsWith("image/")) {
-      throw new Error(`not an image (content-type: ${contentType || "none"}) — likely hotlink protection returning an HTML page instead`);
+    // Deliberately lenient on content-type: plenty of hosts (S3, some CDNs)
+    // serve real images as application/octet-stream. Only reject types that
+    // are clearly not images (HTML from hotlink protection, JSON errors);
+    // anything ambiguous goes to sharp, which throws on non-images anyway.
+    const contentType = (res.headers.get("content-type") || "").toLowerCase();
+    if (/^(text\/|application\/(json|xml))/.test(contentType)) {
+      throw new Error(`not an image (content-type: ${contentType}) — likely hotlink protection returning an HTML page instead`);
     }
     const buf = Buffer.from(await res.arrayBuffer());
-    // Satori's built-in image decoder only understands PNG and JPEG — it
-    // fails (with an unhelpful internal error, not a clean exception message)
-    // on WebP, which is what every real thumbnail on this site actually is.
-    // Transcoding through sharp here guarantees Satori always gets a format
-    // it can decode, regardless of what the CDN actually served.
-    const png = await sharp(buf).png().toBuffer();
-    return `data:image/png;base64,${png.toString("base64")}`;
+    // Satori only decodes PNG/JPEG (not WebP/AVIF), so everything goes through
+    // sharp. Crucially it is also RESIZED to the canvas and encoded as JPEG:
+    // the old code re-encoded the full-resolution original as a lossless PNG,
+    // which for a real photo is several MB of base64 and made rendering hang.
+    // .rotate() applies EXIF orientation; .flatten() removes alpha (JPEG has none).
+    const jpg = await sharp(buf)
+      .rotate()
+      .resize({ width, height, fit: "cover", position: "attention" })
+      .flatten({ background: "#000" })
+      .jpeg({ quality: 82, mozjpeg: false })
+      .toBuffer();
+    return `data:image/jpeg;base64,${jpg.toString("base64")}`;
   } catch (err) {
     console.warn(`cover: image fetch/transcode failed for ${url}, falling back to no-photo variant —`, err.message);
     return null;
@@ -69,7 +78,7 @@ export default async function handler(req, res) {
     const num = part ? String(part).padStart(2, "0") : null;
     const label = buildLabel(q.series, part);
 
-    const imageDataUri = await fetchImageAsDataUri(q.image);
+    const imageDataUri = await fetchImageAsDataUri(q.image, { width, height });
 
     let tree;
     if (size === "social") {
