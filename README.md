@@ -10,6 +10,9 @@ underlying engine as Vercel's own `@vercel/og`. One serverless function,
 `api/cover.js`, does the whole thing per-request; Vercel caches the result at
 the edge since the same query params always produce the same image.
 
+What each image looks like is defined by plain HTML + CSS in `templates/` —
+see [Customizing the look](#customizing-the-look).
+
 ## Local development
 
 ```
@@ -19,6 +22,55 @@ vercel dev
 
 Then open `http://localhost:3000` for the preview form, or hit
 `http://localhost:3000/api/cover?title=Test` directly.
+
+For quick design iteration without the dev server, `npm run preview` renders a
+set of sample covers and a contact sheet at the sizes they appear on the site
+(see below).
+
+## Customizing the look
+
+Everything visual lives in `templates/`:
+
+| File | What it is |
+|---|---|
+| `covers.css` | All styling for every style. Design tokens (colours, fonts, border width) are at the top. |
+| `combo.html` | Default cover: label, title, optional part number |
+| `number-only.html`, `accent-block.html` | Opt-in cover styles |
+| `social-dossier.html`, `social-photo-forward.html` | Social / Open Graph images |
+
+Edit the CSS, run `npm run preview`, and look at `preview/sheet.png` — it shows
+each cover at 286px, 150px and 90px wide, which is roughly how they appear on
+the site (`npm run preview -- --image <url>` adds photo samples). **Judge type
+changes at those sizes, not at full size** — the 1200px canvas is shown at
+~286px on the site, so anything that looks fine full-size can be unreadable
+there.
+
+Good to know:
+
+- **It's normal CSS, with a few limits.** Satori can't read stylesheets, so
+  `lib/render-template.mjs` inlines `covers.css` into each element at render
+  time. Class / descendant / child / `:not()` selectors, `:root`, custom
+  properties and `var()` all work. `@media`, `@font-face`, `@import`, nesting
+  and `!important` don't (you get a clear error). Beyond that you're limited by
+  what Satori supports (flexbox only, no grid, a subset of properties):
+  <https://github.com/vercel/satori#css>.
+- **Some values come from code, not CSS.** The accent colour (`--accent`), the
+  auto-fitted title size (`--title-size`) and the canvas size are set per
+  request. Auto-fit limits (max/min size, how much room the title gets) are in
+  `COVER_TITLE_FIT` in `lib/config.mjs`; keep them in step with `.combo` in the
+  CSS if you change that layout.
+- **Placeholders and sections in the HTML.** `{{title}}` inserts a value;
+  `{{#label}}...{{/label}}` keeps its contents only if `label` is non-empty;
+  `{{^photo}}...{{/photo}}` keeps them only if it's empty. The values each
+  template receives are set in `lib/templates.mjs`. Using a placeholder no
+  value was passed for throws, so typos don't silently render blank.
+- **Classes the code puts on the root element:** `.light` (light-mode cover),
+  and exactly one of `.photo` / `.plain`. Style photo-vs-plain differences with
+  e.g. `.combo.photo .title`.
+- **Adding a template** = a new `.html` file, one line in `TEMPLATES` in
+  `lib/render-template.mjs` (the path must stay a literal string, see the note
+  on `fs.readFileSync` below), a function in `lib/templates.mjs`, and a branch
+  in `api/cover.js`.
 
 ## API
 
@@ -53,15 +105,24 @@ https://covers.thepitlanepost.ca/api/cover?title=The+HANS+device+and+the+Halo&se
   overflows the box. Title truncation on cover renders is a manual
   character-count cut at a word boundary (see `truncateTitle` in
   `lib/templates.mjs`), not a CSS property.
-- **`satori-html`'s `html` tag escapes interpolated HTML fragments.** You
-  cannot build a `<div>...</div>` string separately and splice it into a
-  tagged `` html`...${fragment}` `` template — it prints as literal text.
-  Build the complete markup as a plain string first, then call `html(markup)`
-  as a function. Every template in `lib/templates.mjs` follows this pattern.
-- **Font paths in `lib/fonts.mjs` are written out literally on purpose.**
-  Vercel's function bundler traces static `fs.readFileSync` calls to decide
-  what ships with the function; dynamically-built paths are unreliable for
-  this. `vercel.json`'s `includeFiles` is a second safety net on top of that.
+- **Text and the photo never go through the HTML parser.** Two separate
+  reasons. (1) `satori-html` doesn't decode entities, so `&amp;` would render
+  literally, and raw user text containing `<` breaks the markup. (2) Its
+  parser is super-linear in attribute length: a ~390KB `src="data:..."` took
+  ~33s to parse while Satori itself rendered in ~250ms. So templates carry
+  `{{placeholders}}` and `lib/render-template.mjs` fills them into the *parsed*
+  tree afterwards. Satori also has no CSS variables (`var()` throws), which is
+  why that file resolves them itself.
+- **Photos are resized and re-encoded before use.** Satori only decodes
+  PNG/JPEG, so `api/cover.js` runs every `?image=` through sharp: EXIF-rotate,
+  resize to the canvas, flatten alpha, JPEG. Keeping a lossless full-size PNG
+  here is what used to make photo covers hang.
+- **File paths in `lib/fonts.mjs` and `lib/render-template.mjs` are written out
+  literally on purpose.** Vercel's function bundler traces static
+  `fs.readFileSync` calls to decide what ships with the function;
+  dynamically-built paths are unreliable for this. (Checked with `@vercel/nft`:
+  it picks up every file in `templates/` this way.) `vercel.json`'s
+  `includeFiles` is a second safety net for `node_modules`.
 - **`sharp` will 500 in production even though the build succeeds, unless
   `vercel.json` force-includes all of `node_modules`.** `sharp@0.35.x` loads
   its native `libvips` library via `dlopen()` at runtime rather than a normal

@@ -1,0 +1,14 @@
+<!-- Default cover. Styled by covers.css (.combo). See the header there. -->
+<div class="cover combo {{#light}}light{{/light}} {{#photo}}photo{{/photo}}{{^photo}}plain{{/photo}}">
+  {{#photo}}<img class="bg" src="{{image}}" />{{/photo}}
+
+  <div class="label-row">
+    <div class="accent-square"></div>
+    <div class="label">{{label}}</div>
+  </div>
+
+  <div class="title-row">
+    <div class="title">{{title}}</div>
+    {{#num}}<div class="num">{{num}}</div>{{/num}}
+  </div>
+</div>

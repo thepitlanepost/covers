@@ -1,0 +1,18 @@
+<!-- Opt-in cover: just the part number. Styled by covers.css (.number-only). -->
+<div class="cover number-only {{#light}}light{{/light}} {{#photo}}photo{{/photo}}{{^photo}}plain{{/photo}}">
+  {{#photo}}
+  <img class="bg" src="{{image}}" />
+  <div class="chip">
+    <div class="chip-square"></div>
+    <div class="chip-num">{{num}}</div>
+  </div>
+  {{/photo}}
+
+  {{^photo}}
+  <div class="corner-square"></div>
+  <div class="bottom-row">
+    <div class="big-num">{{num}}</div>
+    <div class="bar"></div>
+  </div>
+  {{/photo}}
+</div>

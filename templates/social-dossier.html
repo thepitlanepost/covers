@@ -1,0 +1,17 @@
+<!-- Default social image. Styled by covers.css (.dossier). Always dark. -->
+<div class="cover dossier {{#photo}}photo{{/photo}}{{^photo}}plain{{/photo}}">
+  {{#photo}}<img class="bg" src="{{image}}" />{{/photo}}
+
+  <div class="site-row">
+    <div class="site">{{site}}</div>
+  </div>
+
+  <div class="body">
+    <div class="panel">
+      <div class="divider"></div>
+      {{#label}}<div class="label">{{label}}</div>{{/label}}
+      <div class="title">{{title}}</div>
+      {{#dek}}<div class="dek">{{dek}}</div>{{/dek}}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,386 @@
+/* ==========================================================================
+   covers.css — how every cover / social image looks.
+   Edit this file to restyle. Structure lives in the *.html files next to it.
+
+   HOW IT WORKS
+   Satori (the renderer) can't read stylesheets, so lib/render-template.mjs
+   inlines this file into each element at render time. Supported here:
+     - class / tag / descendant (a b) / child (a > b) / sibling (a + b) /
+       :not() / :first-child selectors, and :root (= the outermost element)
+     - custom properties + var(--x) / var(--x, fallback), inheriting downward
+   NOT supported: @media, @font-face, @import, nesting, !important.
+   Everything else is limited by what Satori supports (flexbox only, no grid,
+   a subset of properties): https://github.com/vercel/satori#css
+   If a change makes the render fail or do nothing, that's the first place
+   to look.
+
+   VALUES SET BY THE CODE PER REQUEST (don't hard-code these):
+     --accent       the ?accent= colour
+     --title-size   auto-fitted title size (see COVER_TITLE_FIT in
+                    lib/config.mjs, and titleFontSize in lib/templates.mjs)
+     width/height   the canvas size (SIZES in lib/config.mjs)
+
+   CLASSES THE CODE ADDS TO THE ROOT ELEMENT
+     .light   cover, light mode (dark is simply "no .light")
+     .photo   an ?image= was supplied and loaded      } exactly one of
+     .plain   no photo (or the photo failed to load)  } these two is set
+   ========================================================================== */
+
+
+/* --- Design tokens ------------------------------------------------------- */
+
+:root {
+  /* Colours. Dark is the default; .light below swaps them. The light values
+     are copied from the site's html[data-color-mode="light"] block in
+     style.css. Social images never get .light (no theme in a link unfurl). */
+  --bg: #000000;
+  --text: #ffffff;
+  --border: #ffffff;
+
+  /* Fonts: names must match lib/fonts.mjs */
+  --font-heading: Aileron;
+  --font-body: 'Mozilla Text';
+
+  --border-width: 6px;
+}
+
+.light {
+  --bg: #ffffff;
+  --text: #000000;
+  --border: #000000;
+}
+
+
+/* --- Shared building blocks ---------------------------------------------- */
+
+/* Satori wants an explicit display on every div */
+div {
+  display: flex;
+}
+
+/* Every template's root element */
+.cover {
+  box-sizing: border-box;
+  border: var(--border-width) solid var(--border);
+}
+
+/* Full-bleed photo behind everything */
+.bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo {
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* ==========================================================================
+   COMBO — the default cover: label, title, optional part number
+   ========================================================================== */
+
+.combo {
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.combo.plain {
+  background: var(--bg);
+  color: var(--text);
+  padding: 30px;
+}
+
+.combo.photo {
+  color: #ffffff;
+}
+
+.combo .label-row {
+  align-items: center;
+  gap: 8px;
+}
+
+.combo.photo .label-row {
+  position: relative;
+  padding: 28px 28px 0;
+}
+
+.combo .accent-square {
+  width: 26px;
+  height: 26px;
+  background: var(--accent);
+}
+
+.combo .label {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 44px;
+  opacity: 0.7;
+}
+
+.combo.photo .label {
+  font-size: 40px;
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 6px 14px;
+}
+
+.combo .title-row {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.combo.photo .title-row {
+  position: relative;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 26px 28px;
+}
+
+.combo .title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--title-size);
+  line-height: 1.1;
+  max-width: 78%;
+}
+
+.combo .num {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 150px;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.combo.photo .num {
+  font-size: 96px;
+}
+
+
+/* ==========================================================================
+   NUMBER-ONLY — opt-in (coverStyle: number-only). Just the part number.
+   ========================================================================== */
+
+.number-only.plain {
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg);
+  padding: 28px;
+}
+
+.number-only .corner-square {
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+}
+
+.number-only .bottom-row {
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.number-only .big-num {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 260px;
+  color: var(--text);
+  line-height: 0.85;
+}
+
+.number-only .bar {
+  width: 100px;
+  height: 8px;
+  background: var(--accent);
+  margin-bottom: 20px;
+}
+
+/* photo variant: small chip in the bottom-left corner */
+.number-only .chip {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 14px;
+}
+
+.number-only .chip-square {
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+}
+
+.number-only .chip-num {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 24px;
+  color: #ffffff;
+}
+
+
+/* ==========================================================================
+   ACCENT-BLOCK — opt-in (coverStyle: accent-block). A flat colour field.
+   ========================================================================== */
+
+.accent-block {
+  align-items: flex-end;
+  justify-content: flex-start;
+  background: var(--accent);
+  padding: 28px;
+}
+
+.accent-block .mark {
+  width: 64px;
+  height: 10px;
+  background: #000000;
+}
+
+
+/* ==========================================================================
+   SOCIAL — DOSSIER (default): site name, accent divider, label, title, dek
+   Social is always dark, so no .light here.
+   ========================================================================== */
+
+.dossier {
+  flex-direction: column;
+  color: var(--text);
+}
+
+.dossier.plain {
+  background: var(--bg);
+}
+
+.dossier .site-row {
+  padding: 40px 52px 0;
+}
+
+.dossier.photo .site-row {
+  position: relative;
+}
+
+.dossier .site {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+.dossier.photo .site {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 8px;
+}
+
+.dossier .body {
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.dossier.photo .body {
+  position: relative;
+}
+
+.dossier .panel {
+  flex-direction: column;
+  padding: 0 52px 44px;
+}
+
+.dossier.photo .panel {
+  background: rgba(0, 0, 0, 0.72);
+  padding: 34px 52px 44px;
+}
+
+.dossier .divider {
+  height: 5px;
+  width: 100%;
+  background: var(--accent);
+  margin-bottom: 22px;
+}
+
+.dossier .label {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  opacity: 0.65;
+  margin-bottom: 12px;
+}
+
+.dossier.photo .label {
+  opacity: 0.75;
+}
+
+.dossier .title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--title-size);
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.dossier .dek {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.4;
+  opacity: 0.75;
+  max-width: 92%;
+}
+
+.dossier.photo .dek {
+  opacity: 0.8;
+}
+
+
+/* ==========================================================================
+   SOCIAL — PHOTO-FORWARD (opt-in, needs an image): photo + title bar
+   ========================================================================== */
+
+.photo-forward {
+  color: var(--text);
+}
+
+.photo-forward .corner {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  align-items: center;
+  gap: 8px;
+}
+
+.photo-forward .corner-square {
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+}
+
+.photo-forward .site {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 8px;
+}
+
+.photo-forward .title-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.68);
+  padding: 28px 32px;
+}
+
+.photo-forward .title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1.1;
+}
