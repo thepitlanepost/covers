@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Dynamic cover + social-preview image generator for The Pitlane Post.",
+  "scripts": {
+    "preview": "node scripts/preview.mjs"
+  },
   "dependencies": {
     "@fontsource/aileron": "^5.3.0",
     "@fontsource/mozilla-text": "^5.3.0",
