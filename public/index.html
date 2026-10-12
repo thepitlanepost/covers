@@ -100,6 +100,11 @@
   </div>
 
   <div>
+    <label for="circuit">Circuit outline (optional, default cover only)</label>
+    <input id="circuit" placeholder="e.g. monza, spa, las-vegas" />
+  </div>
+
+  <div>
     <label for="image">Linked image URL (optional)</label>
     <input id="image" placeholder="https://cheese.net/cheese.png" />
   </div>
@@ -141,7 +146,7 @@
 <script>
   const API = "/api/cover"; // same origin — swap for a full URL if this page is ever hosted elsewhere
   const $ = (id) => document.getElementById(id);
-  const fields = ["title", "series", "part", "dek", "image", "style", "size", "accent"];
+  const fields = ["title", "series", "part", "dek", "image", "circuit", "style", "size", "accent"];
 
   function buildUrl() {
     const params = new URLSearchParams();

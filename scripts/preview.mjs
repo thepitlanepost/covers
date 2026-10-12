@@ -32,6 +32,10 @@ const covers = [
   ["combo, over the 70-char budget", { ...base, title: OVER, part: 1 }],
   ["combo, light mode", { ...base, title: MEDIUM, part: 1, mode: "light" }],
   ["combo, no part number", { title: MEDIUM, accent: "#2a9d8f" }],
+  ["combo + circuit, medium title", { ...base, title: MEDIUM, part: 1, circuit: "monza" }],
+  ["combo + circuit, long title", { ...base, title: LONG, part: 1, circuit: "spa" }],
+  ["combo + circuit, light mode", { ...base, title: SHORT, part: 1, circuit: "suzuka", mode: "light" }],
+  ["combo + circuit, no part number", { title: MEDIUM, circuit: "monaco", accent: "#2a9d8f" }],
   ["number-only", { ...base, title: MEDIUM, part: 3, style: "number-only" }],
   ["accent-block", { ...base, title: MEDIUM, style: "accent-block" }],
 ];

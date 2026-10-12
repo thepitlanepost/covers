@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { fonts } from "../lib/fonts.mjs";
 import { coverCombo, coverNumberOnly, coverAccentBlock, socialDossier, socialPhotoForward } from "../lib/templates.mjs";
 import { SIZES, DEFAULT_ACCENT, SITE_NAME, WEBP_QUALITY } from "../lib/config.mjs";
+import { circuitOutlineDataUri } from "../lib/circuits.mjs";
 
 // Node.js is already the default runtime for a plain /api/*.js function with
 // no framework — sharp needs that (it's a native module, won't run on Edge).
@@ -80,6 +81,12 @@ export default async function handler(req, res) {
 
     const imageDataUri = await fetchImageAsDataUri(q.image, { width, height });
 
+    // ?circuit=<slug> adds a track outline to the default (combo) cover.
+    // Unknown slugs just render without one, like every other bad param here.
+    const circuitSlug = typeof q.circuit === "string" ? q.circuit.trim().toLowerCase() : "";
+    const outlineDataUri = circuitSlug ? circuitOutlineDataUri(circuitSlug, accent) : null;
+    if (circuitSlug && !outlineDataUri) console.warn(`cover: unknown circuit "${circuitSlug.slice(0, 40)}" — rendering without an outline`);
+
     let tree;
     if (size === "social") {
       // Social/OG images are fetched once by a link-unfurl crawler with no
@@ -97,7 +104,7 @@ export default async function handler(req, res) {
       // number-only without a number doesn't mean anything — fall back to combo
       tree = coverNumberOnly({ w: width, h: height, num, accent, imageDataUri, mode });
     } else {
-      tree = coverCombo({ w: width, h: height, num, title, label, accent, imageDataUri, mode });
+      tree = coverCombo({ w: width, h: height, num, title, label, accent, imageDataUri, outlineDataUri, mode });
     }
 
     const svg = await satori(tree, { width, height, fonts });

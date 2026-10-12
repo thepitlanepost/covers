@@ -88,11 +88,48 @@ Good to know:
 | `size`   | no       | `cover` (1200×675, matches the site's `.box` ratio) or `social` (1200×630, standard OG ratio). Default `cover`. |
 | `mode`   | no       | Cover only. `dark` (default) / `light`. Social renders ignore it and are always dark (a link-unfurl crawler has no theme). |
 | `accent` | no       | Hex color, e.g. `%23c4302b` (URL-encode the `#`). Falls back to `DEFAULT_ACCENT` in config.mjs if missing or malformed. |
+| `circuit` | no      | Cover only, default `combo` style only. A circuit slug (e.g. `monza`, `spa`, `las-vegas`; the full list is in [Circuit outlines](#circuit-outlines)). Draws the track outline on the right of the cover in the accent colour. Unknown slugs are ignored, and a cover with a photo (`image`) ignores it. |
 
 Example:
 ```
 https://covers.thepitlanepost.ca/api/cover?title=The+HANS+device+and+the+Halo&series=Motorsport+Safety%2C+Then+vs.+Now&part=1&accent=%23c4302b&size=cover
 ```
+
+## Circuit outlines
+
+`?circuit=<slug>` puts a track outline next to the title, drawn in the accent
+colour. The outline sits on the right as an image, the title is held to the
+left half, and the part number stays bottom-right. Layout and box size are in
+`templates/covers.css` (`.combo .outline`, `.combo.circuit`), stroke thickness
+and the title's auto-fit width are in `lib/config.mjs` (`OUTLINE`,
+`COVER_TITLE_FIT.circuit`).
+
+Slugs (every venue on the 2026 and 2027 F1 calendars): `albert-park`,
+`shanghai`, `suzuka`, `bahrain`, `jeddah`, `miami`, `montreal`, `monaco`,
+`barcelona`, `red-bull-ring`, `silverstone`, `spa`, `hungaroring`, `zandvoort`,
+`monza`, `madring`, `baku`, `sepang`, `singapore`, `cota`, `mexico-city`,
+`interlagos`, `las-vegas`, `lusail`, `yas-marina`, `portimao`, `istanbul-park`.
+
+The data lives in `data/circuits.json`, generated from the
+[bacinger/f1-circuits](https://github.com/bacinger/f1-circuits) GeoJSON dataset
+(MIT, notice in `data/CIRCUITS-LICENSE.md`). It's committed, so nothing is
+fetched at runtime. To add a circuit or refresh the data:
+
+```
+git clone --depth 1 https://github.com/bacinger/f1-circuits ../f1-circuits
+# add the slug -> dataset id (the file name in ../f1-circuits/circuits/) to CIRCUITS in scripts/build-circuits.mjs
+npm run build:circuits -- ../f1-circuits
+```
+
+Things to know:
+
+- **One layout per circuit, current layouts only** (the dataset's last update was
+  for the 2026 season). There are no historic layouts and nothing outside F1.
+- **The dataset has only ~80-200 points per track**, so the script smooths the
+  path with Catmull-Rom curves. Tight details like chicanes are rounded off.
+- **Accuracy:** for the 27 circuits here, each outline's path length is within
+  1.0% of the dataset's stated lap length (median 0.2%). That checks the
+  geometry is self-consistent, not that every shape matches the real layout.
 
 ## Design notes worth knowing before touching this
 

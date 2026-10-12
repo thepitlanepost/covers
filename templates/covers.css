@@ -163,6 +163,26 @@ div {
 }
 
 
+/* Cover with a circuit outline (?circuit=...): the outline sits on the right
+   as an image, the title is held to the left half, and the part number stays
+   bottom-right underneath it. The code only adds .circuit to plain covers (a
+   photo cover ignores ?circuit). The title's auto-fit width is
+   COVER_TITLE_FIT.circuit in lib/config.mjs — keep it in step with the
+   max-width below. */
+.combo .outline {
+  position: absolute;
+  top: 92px;
+  right: 40px;
+  width: 520px;
+  height: 390px;
+  object-fit: contain;
+}
+
+.combo.circuit .title {
+  max-width: 52%;
+}
+
+
 /* ==========================================================================
    NUMBER-ONLY — opt-in (coverStyle: number-only). Just the part number.
    ========================================================================== */
