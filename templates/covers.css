@@ -17,13 +17,19 @@
    VALUES SET BY THE CODE PER REQUEST (don't hard-code these):
      --accent       the ?accent= colour
      --title-size   auto-fitted title size (see COVER_TITLE_FIT in
-                    lib/config.mjs, and titleFontSize in lib/templates.mjs)
+                    lib/config.mjs, and fitTitleSize in lib/templates.mjs)
+     --label-size   auto-fitted label size (LABEL_FIT in lib/config.mjs)
+     --outline-w, --outline-h, --outline-gap, --outline-name-size
+                    circuit covers only: the outline's fitted size, and the
+                    track name's size and gap (OUTLINE in lib/config.mjs)
      width/height   the canvas size (SIZES in lib/config.mjs)
 
    CLASSES THE CODE ADDS TO THE ROOT ELEMENT
      .light   cover, light mode (dark is simply "no .light")
      .photo   an ?image= was supplied and loaded      } exactly one of
      .plain   no photo (or the photo failed to load)  } these two is set
+     .circuit a ?circuit= outline is being drawn (plain covers only)
+     .has-num the cover has a part number
    ========================================================================== */
 
 
@@ -118,12 +124,11 @@ div {
 .combo .label {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 44px;
+  font-size: var(--label-size, 44px);
   opacity: 0.7;
 }
 
 .combo.photo .label {
-  font-size: 40px;
   opacity: 1;
   background: rgba(0, 0, 0, 0.55);
   padding: 6px 14px;
@@ -163,19 +168,46 @@ div {
 }
 
 
-/* Cover with a circuit outline (?circuit=...): the outline sits on the right
-   as an image, the title is held to the left half, and the part number stays
-   bottom-right underneath it. The code only adds .circuit to plain covers (a
-   photo cover ignores ?circuit). The title's auto-fit width is
-   COVER_TITLE_FIT.circuit in lib/config.mjs — keep it in step with the
-   max-width below. */
-.combo .outline {
+/* Cover with a circuit outline (?circuit=...). The outline and the track name
+   under it are centred as a group in the free space right of the title; the
+   part number, if there is one, stays bottom-right underneath.
+
+   .outline-wrap is that free space. Its edges are measured from inside the 6px
+   border: left starts just past the title's right edge (title = 52% of the
+   content width, see COVER_TITLE_FIT.circuit in lib/config.mjs), top clears the
+   label row, and with a part number the bottom stops above the number. These
+   numbers must match OUTLINE.region in lib/config.mjs, which the code uses to
+   size the outline: width 524 = 1188 - 634 - 30; height 539 = 663 - 94 - 30
+   (373 = 663 - 94 - 196 with a number). The outline's own size comes from the
+   code (--outline-w / --outline-h) so its proportions never get squashed. */
+.combo .outline-wrap {
   position: absolute;
-  top: 92px;
-  right: 40px;
-  width: 520px;
-  height: 390px;
-  object-fit: contain;
+  top: 94px;
+  left: 634px;
+  right: 30px;
+  bottom: 30px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.combo.has-num .outline-wrap {
+  bottom: 196px;
+}
+
+.combo .outline {
+  width: var(--outline-w);
+  height: var(--outline-h);
+}
+
+.combo .outline-name {
+  margin-top: var(--outline-gap);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--outline-name-size);
+  line-height: 1.2;
+  text-align: center;
+  opacity: 0.7;
 }
 
 .combo.circuit .title {

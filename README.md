@@ -80,6 +80,7 @@ Good to know:
 |----------|----------|-------|
 | `title`  | yes      | Falls back to "Untitled" if missing. Truncated at `TITLE_CHAR_BUDGET` (config.mjs) on cover-size renders; shrinks font size instead on social. |
 | `series` | no       | Series or category name. Combined with `part` to build the label ("Part 01 — X"), or shown alone if there's no part number. |
+| `race`   | no       | The race's full name, e.g. `Formula 1 Lenovo Grand Prix du Canada`. Shown in the label slot (top-left), **replacing** the series/part label, so it wins if both are sent. The label shrinks to fit one line (`LABEL_FIT`, config.mjs). Capped at 100 characters. Applies to cover and social. |
 | `part`   | no       | Number. Only meaningful for numbered content (Explains parts). Omit for Weekend Verdict / blog. |
 | `dek`    | no       | Social, `dossier` style only. Ignored on cover renders and on `photo-forward` — both deliberately. |
 | `image`  | no       | Absolute URL to a photo to use as the background. Works on cover **and** social now. Fetched server-side; if it fails or times out, silently falls back to the no-photo variant rather than erroring. |
@@ -88,7 +89,7 @@ Good to know:
 | `size`   | no       | `cover` (1200×675, matches the site's `.box` ratio) or `social` (1200×630, standard OG ratio). Default `cover`. |
 | `mode`   | no       | Cover only. `dark` (default) / `light`. Social renders ignore it and are always dark (a link-unfurl crawler has no theme). |
 | `accent` | no       | Hex color, e.g. `%23c4302b` (URL-encode the `#`). Falls back to `DEFAULT_ACCENT` in config.mjs if missing or malformed. |
-| `circuit` | no      | Cover only, default `combo` style only. A circuit slug (e.g. `monza`, `spa`, `las-vegas`; the full list is in [Circuit outlines](#circuit-outlines)). Draws the track outline on the right of the cover in the accent colour. Unknown slugs are ignored, and a cover with a photo (`image`) ignores it. |
+| `circuit` | no      | Cover only, default `combo` style only. A circuit slug (e.g. `monza`, `spa`, `las-vegas`; the full list is in [Circuit outlines](#circuit-outlines)). Draws the track outline on the right of the cover in the accent colour, with the track's name under it. Unknown slugs are ignored, and a cover with a photo (`image`) ignores it. |
 
 Example:
 ```
@@ -98,11 +99,17 @@ https://covers.thepitlanepost.ca/api/cover?title=The+HANS+device+and+the+Halo&se
 ## Circuit outlines
 
 `?circuit=<slug>` puts a track outline next to the title, drawn in the accent
-colour. The outline sits on the right as an image, the title is held to the
-left half, and the part number stays bottom-right. Layout and box size are in
-`templates/covers.css` (`.combo .outline`, `.combo.circuit`), stroke thickness
-and the title's auto-fit width are in `lib/config.mjs` (`OUTLINE`,
-`COVER_TITLE_FIT.circuit`).
+colour, with the track's name (from `data/circuits.json`) under it. The title is
+held to the left half; the outline and its name are centred together, as a
+group, in the free space to the right; the part number, if any, stays
+bottom-right underneath. The outline is scaled to fit that space (keeping its
+proportions) by `fitOutline` in `lib/templates.mjs`.
+
+The space itself is `.outline-wrap` in `templates/covers.css`; `OUTLINE.region`
+in `lib/config.mjs` holds the same size in px, and the two must be kept in step
+(the comments in both say how the numbers are derived). Stroke thickness,
+caption size and gap are also in `OUTLINE`; the title's auto-fit width is
+`COVER_TITLE_FIT.circuit`.
 
 Slugs (every venue on the 2026 and 2027 F1 calendars): `albert-park`,
 `shanghai`, `suzuka`, `bahrain`, `jeddah`, `miami`, `montreal`, `monaco`,

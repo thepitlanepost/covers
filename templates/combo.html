@@ -1,7 +1,12 @@
 <!-- Default cover. Styled by covers.css (.combo). See the header there. -->
-<div class="cover combo {{#light}}light{{/light}} {{#photo}}photo{{/photo}}{{^photo}}plain{{/photo}} {{#outline}}circuit{{/outline}}">
+<div class="cover combo {{#light}}light{{/light}} {{#photo}}photo{{/photo}}{{^photo}}plain{{/photo}} {{#outline}}circuit{{/outline}} {{#num}}has-num{{/num}}">
   {{#photo}}<img class="bg" src="{{image}}" />{{/photo}}
-  {{#outline}}<img class="outline" src="{{outline}}" />{{/outline}}
+  {{#outline}}
+  <div class="outline-wrap">
+    <img class="outline" src="{{outline}}" />
+    <div class="outline-name">{{outlineName}}</div>
+  </div>
+  {{/outline}}
 
   <div class="label-row">
     <div class="accent-square"></div>

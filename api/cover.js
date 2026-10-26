@@ -4,7 +4,7 @@ import sharp from "sharp";
 import { fonts } from "../lib/fonts.mjs";
 import { coverCombo, coverNumberOnly, coverAccentBlock, socialDossier, socialPhotoForward } from "../lib/templates.mjs";
 import { SIZES, DEFAULT_ACCENT, SITE_NAME, WEBP_QUALITY } from "../lib/config.mjs";
-import { circuitOutlineDataUri } from "../lib/circuits.mjs";
+import { circuitOutline } from "../lib/circuits.mjs";
 
 // Node.js is already the default runtime for a plain /api/*.js function with
 // no framework — sharp needs that (it's a native module, won't run on Edge).
@@ -12,6 +12,7 @@ import { circuitOutlineDataUri } from "../lib/circuits.mjs";
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const IMAGE_FETCH_TIMEOUT_MS = 5000;
+const RACE_MAX_CHARS = 100; // a safety cap; the label also shrinks to fit (LABEL_FIT)
 
 // Never let a bad/slow/dead linked-image URL take the whole cover down —
 // fall back to the no-photo variant of whichever style was requested. This
@@ -77,15 +78,18 @@ export default async function handler(req, res) {
     const title = q.title || "Untitled";
     const part = q.part ? Number(q.part) : null;
     const num = part ? String(part).padStart(2, "0") : null;
-    const label = buildLabel(q.series, part);
+    // ?race= is the race's full name ("Formula 1 Lenovo Grand Prix du Canada").
+    // It takes the label slot (top-left), so it wins over the series/part label.
+    const race = typeof q.race === "string" ? q.race.trim().slice(0, RACE_MAX_CHARS) : "";
+    const label = race || buildLabel(q.series, part);
 
     const imageDataUri = await fetchImageAsDataUri(q.image, { width, height });
 
     // ?circuit=<slug> adds a track outline to the default (combo) cover.
     // Unknown slugs just render without one, like every other bad param here.
     const circuitSlug = typeof q.circuit === "string" ? q.circuit.trim().toLowerCase() : "";
-    const outlineDataUri = circuitSlug ? circuitOutlineDataUri(circuitSlug, accent) : null;
-    if (circuitSlug && !outlineDataUri) console.warn(`cover: unknown circuit "${circuitSlug.slice(0, 40)}" — rendering without an outline`);
+    const outline = circuitSlug ? circuitOutline(circuitSlug, accent) : null;
+    if (circuitSlug && !outline) console.warn(`cover: unknown circuit "${circuitSlug.slice(0, 40)}" — rendering without an outline`);
 
     let tree;
     if (size === "social") {
@@ -104,7 +108,7 @@ export default async function handler(req, res) {
       // number-only without a number doesn't mean anything — fall back to combo
       tree = coverNumberOnly({ w: width, h: height, num, accent, imageDataUri, mode });
     } else {
-      tree = coverCombo({ w: width, h: height, num, title, label, accent, imageDataUri, outlineDataUri, mode });
+      tree = coverCombo({ w: width, h: height, num, title, label, accent, imageDataUri, outline, mode });
     }
 
     const svg = await satori(tree, { width, height, fonts });

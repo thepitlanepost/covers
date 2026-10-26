@@ -100,6 +100,11 @@
   </div>
 
   <div>
+    <label for="race">Race title (optional, replaces the series/part label)</label>
+    <input id="race" placeholder="e.g. Formula 1 Lenovo Grand Prix du Canada" />
+  </div>
+
+  <div>
     <label for="circuit">Circuit outline (optional, default cover only)</label>
     <input id="circuit" placeholder="e.g. monza, spa, las-vegas" />
   </div>
@@ -146,7 +151,7 @@
 <script>
   const API = "/api/cover"; // same origin — swap for a full URL if this page is ever hosted elsewhere
   const $ = (id) => document.getElementById(id);
-  const fields = ["title", "series", "part", "dek", "image", "circuit", "style", "size", "accent"];
+  const fields = ["title", "series", "part", "race", "dek", "image", "circuit", "style", "size", "accent"];
 
   function buildUrl() {
     const params = new URLSearchParams();
